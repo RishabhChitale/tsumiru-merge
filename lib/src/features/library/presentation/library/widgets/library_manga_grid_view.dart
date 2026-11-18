@@ -45,7 +45,7 @@ class LibraryMangaGridView extends StatelessWidget {
   final String? Function(MangaDto manga)? linkLocationFor;
 
   /// Number of merged entries for a group's representative; null for singles.
-  final int? Function(MangaDto manga)? entryCountFor;
+  final ({int entries, int unread})? Function(MangaDto manga)? entryCountFor;
 
   @override
   Widget build(BuildContext context) => CustomScrollView(
@@ -83,7 +83,7 @@ class LibraryMangaSliver extends ConsumerWidget {
   final String? Function(MangaDto manga)? linkLocationFor;
 
   /// Number of merged entries for a group's representative; null for singles.
-  final int? Function(MangaDto manga)? entryCountFor;
+  final ({int entries, int unread})? Function(MangaDto manga)? entryCountFor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -165,7 +165,9 @@ class LibraryMangaSliver extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  context.l10n.mergedEntries(count),
+                  count.unread > 0
+                      ? '${context.l10n.mergedEntries(count.entries)} · ${context.l10n.unreadCount(count.unread)}'
+                      : context.l10n.mergedEntries(count.entries),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onTertiaryContainer,
                   ),

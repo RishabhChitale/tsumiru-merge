@@ -226,22 +226,25 @@ class CategoryMangaList extends HookConsumerWidget {
                 g.representative
               else ...[
                 () {
-                  final unread = g.members.fold<int>(
-                    0,
-                    (a, m) => a + m.user.unreadCount.getValueOnNullOrNegative(),
-                  );
-                  final rep = g.representative.copyWith(
-                    user: g.representative.user.copyWith(unreadCount: unread),
-                  );
-                  mergedMembers[rep.id] = g.members;
-                  return rep;
+                  mergedMembers[g.representative.id] = g.members;
+                  return g.representative;
                 }(),
               ],
           ];
         }
         final Widget grid = LibraryMangaGridView(
           items: displayItems,
-          entryCountFor: (m) => mergedMembers[m.id]?.length,
+          entryCountFor: (m) {
+            final ms = mergedMembers[m.id];
+            if (ms == null) return null;
+            return (
+              entries: ms.length,
+              unread: ms.fold<int>(
+                0,
+                (a, e) => a + e.user.unreadCount.getValueOnNullOrNegative(),
+              ),
+            );
+          },
           selection: selection.value,
           onOpen: open,
           onLongPress: (manga) => toggle(manga.id),
