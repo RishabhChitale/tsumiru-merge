@@ -1,0 +1,19 @@
+{
+  "name": "Tsumiru Merge",
+  "identifier": "io.github.rishabhchitale.tsumirumerge.source",
+  "sourceURL": "https://raw.githubusercontent.com/RishabhChitale/tsumiru-merge/main/apps.json",
+  "apps": [
+    {
+      "name": "Tsumiru (merge by title)",
+      "bundleIdentifier": "com.suwayomi.tachideskSorayomi",
+      "developerName": "Suwayomi (fork by RishabhChitale)",
+      "subtitle": "Tsumiru with library entries merged by title",
+      "localizedDescription": "Fork of Suwayomi-Tsumiru 1.6.5. Groups library entries that share a title into one poster (display only; nothing changes on the server).",
+      "iconURL": "https://raw.githubusercontent.com/RishabhChitale/tsumiru-merge/main/ios/Runner/Assets.xcassets/AppIcon.appiconset/1024.png",
+      "version": "1.6.5",
+      "versionDate": "2026-11-18",
+      "downloadURL": "https://github.com/RishabhChitale/tsumiru-merge/releases/download/v1.6.5-merge.1/tsumiru-merge-v1.6.5-merge.1-ios.ipa",
+      "size": 17360157
+    }
+  ]
+}
