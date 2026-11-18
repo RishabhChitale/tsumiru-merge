@@ -63,6 +63,8 @@ enum DBKeys {
   listScale(1.0),
   libraryGroupStyle(LibraryGroupStyle.tabs),
   showContinueReadingButton(false),
+  mergeByTitle(true),
+  mergeMaxChapters(5),
   // -1 asks for a category; 0 is uncategorized; positive values are category ids.
   libraryDefaultCategory(-1),
   // Null follows the device locale, falling back to English.

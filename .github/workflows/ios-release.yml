@@ -1,0 +1,36 @@
+# Tag build: unsigned iOS .ipa attached to a GitHub release.
+# Re-sign with SideStore / AltStore. No secrets are used.
+name: iOS release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+          channel: stable
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Build iOS (unsigned)
+        run: flutter build ios --release --no-codesign
+      - name: Package ipa
+        run: |
+          mkdir -p dist Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry "dist/tsumiru-merge-${{ github.ref_name }}-ios.ipa" Payload
+          ls -l dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.ipa
+          generate_release_notes: true

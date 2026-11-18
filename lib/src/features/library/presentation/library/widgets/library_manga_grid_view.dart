@@ -33,6 +33,7 @@ class LibraryMangaGridView extends StatelessWidget {
     this.onLongPress,
     this.selection = const {},
     this.linkLocationFor,
+    this.entryCountFor,
   });
 
   final List<MangaDto> items;
@@ -43,6 +44,9 @@ class LibraryMangaGridView extends StatelessWidget {
 
   final String? Function(MangaDto manga)? linkLocationFor;
 
+  /// Number of merged entries for a group's representative; null for singles.
+  final int? Function(MangaDto manga)? entryCountFor;
+
   @override
   Widget build(BuildContext context) => CustomScrollView(
     slivers: [
@@ -52,6 +56,7 @@ class LibraryMangaGridView extends StatelessWidget {
         onLongPress: onLongPress,
         selection: selection,
         linkLocationFor: linkLocationFor,
+        entryCountFor: entryCountFor,
       ),
     ],
   );
@@ -66,6 +71,7 @@ class LibraryMangaSliver extends ConsumerWidget {
     this.onLongPress,
     this.selection = const {},
     this.linkLocationFor,
+    this.entryCountFor,
   });
 
   final List<MangaDto> items;
@@ -75,6 +81,9 @@ class LibraryMangaSliver extends ConsumerWidget {
   final Set<int> selection;
 
   final String? Function(MangaDto manga)? linkLocationFor;
+
+  /// Number of merged entries for a group's representative; null for singles.
+  final int? Function(MangaDto manga)? entryCountFor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -139,10 +148,39 @@ class LibraryMangaSliver extends ConsumerWidget {
     // Masonry cannot relocate children with null offsets; re-key when item order changes.
     Key masonryOrderKey() => ValueKey(Object.hashAll(items.map((m) => m.id)));
 
+    Widget badged(MangaDto manga, Widget child) {
+      final count = entryCountFor?.call(manga);
+      if (count == null) return child;
+      return Stack(
+        children: [
+          child,
+          Positioned(
+            right: 6,
+            bottom: 6,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  context.l10n.mergedEntries(count),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onTertiaryContainer,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     Widget grid({bool titleBelow = false, bool showTitle = true}) {
       Widget tile(BuildContext context, int index) {
         final manga = items[index];
-        return MangaCoverGridTile(
+        return badged(manga, MangaCoverGridTile(
           key: ValueKey<int>(manga.id),
           manga: manga,
           selected: selection.contains(manga.id),
@@ -159,7 +197,7 @@ class LibraryMangaSliver extends ConsumerWidget {
           gridStyle: gridStyle,
           outlineOnCovers: outlineOnCovers,
           limitTitleLines: limitTitleLines,
-        );
+        ));
       }
 
       return switch (gridStyle) {
@@ -219,7 +257,7 @@ class LibraryMangaSliver extends ConsumerWidget {
       DisplayMode.list || null => listSliver(
         extent: 96 * rowScale,
         builder: (context, index) => scaled(
-          MangaCoverListTile(
+          badged(items[index], MangaCoverListTile(
             key: ValueKey<int>(items[index].id),
             manga: items[index],
             selected: selection.contains(items[index].id),
@@ -234,14 +272,14 @@ class LibraryMangaSliver extends ConsumerWidget {
             showCountBadges: true,
             scale: listScale,
             limitTitleLines: limitTitleLines,
-          ),
+          )),
         ),
       ),
       DisplayMode.descriptiveList => listSliver(
         extent: 176 * rowScale,
         fixedExtent: false,
         builder: (context, index) => scaled(
-          MangaCoverDescriptiveListTile(
+          badged(items[index], MangaCoverDescriptiveListTile(
             key: ValueKey<int>(items[index].id),
             manga: items[index],
             selected: selection.contains(items[index].id),
@@ -257,7 +295,7 @@ class LibraryMangaSliver extends ConsumerWidget {
             outlineOnCovers: outlineOnCovers,
             scale: listScale,
             titleMaxLines: limitTitleLines ? 2 : null,
-          ),
+          )),
         ),
       ),
       DisplayMode.grid => grid(),

@@ -31,6 +31,8 @@ import '../../../manga_book/data/updates/updates_repository.dart';
 import '../../../manga_book/domain/chapter/chapter_download_presets.dart';
 import '../../../manga_book/domain/chapter/chapter_model.dart';
 import '../../../manga_book/domain/manga/manga_model.dart';
+import '../../domain/merge_group.dart';
+import '../merged/merged_series_screen.dart';
 import '../../../manga_book/presentation/manga_details/controller/scanlator_dedup.dart';
 import '../../../manga_book/presentation/manga_details/widgets/edit_manga_category_dialog.dart';
 import '../../../migration/presentation/screens/migration_window.dart';
@@ -46,6 +48,7 @@ import '../../../offline/presentation/offline_view_loading.dart';
 import '../../../tracking/domain/track_progress_gate.dart';
 import 'controller/library_controller.dart';
 import 'controller/library_manga_list.dart';
+import 'controller/merge_settings_providers.dart';
 import 'widgets/edit_mangas_category_dialog.dart';
 import 'widgets/library_manga_grid_view.dart';
 
@@ -100,9 +103,19 @@ class CategoryMangaList extends HookConsumerWidget {
       selection.value = next;
     }
 
+    // Groups of 2+ titles shown as one poster, keyed by representative id.
+    final mergedMembers = <int, List<MangaDto>>{};
+
     void open(MangaDto manga) {
+      final members = mergedMembers[manga.id];
       if (selecting) {
         toggle(manga.id);
+      } else if (members != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => MergedSeriesScreen(members: members),
+          ),
+        );
       } else {
         MangaRoute(mangaId: manga.id, categoryId: categoryId).push(context);
       }
@@ -197,8 +210,38 @@ class CategoryMangaList extends HookConsumerWidget {
           );
         }
         final items = data!;
+        mergedMembers.clear();
+        var displayItems = items;
+        if (ref.watch(mergeByTitleProvider) ?? true) {
+          final groups = groupByMergeKey<MangaDto>(
+            items,
+            title: (m) => m.title,
+            chapterCount: (m) => m.chapters.totalCount,
+            recency: (m) => m.user.inLibraryAt.getValueOnNullOrNegative(),
+            maxChapters: ref.watch(mergeMaxChaptersProvider) ?? 5,
+          );
+          displayItems = [
+            for (final g in groups)
+              if (!g.isMerged)
+                g.representative
+              else ...[
+                () {
+                  final unread = g.members.fold<int>(
+                    0,
+                    (a, m) => a + m.user.unreadCount.getValueOnNullOrNegative(),
+                  );
+                  final rep = g.representative.copyWith(
+                    user: g.representative.user.copyWith(unreadCount: unread),
+                  );
+                  mergedMembers[rep.id] = g.members;
+                  return rep;
+                }(),
+              ],
+          ];
+        }
         final Widget grid = LibraryMangaGridView(
-          items: items,
+          items: displayItems,
+          entryCountFor: (m) => mergedMembers[m.id]?.length,
           selection: selection.value,
           onOpen: open,
           onLongPress: (manga) => toggle(manga.id),

@@ -29,6 +29,7 @@ import '../../../library/domain/category/category_model.dart';
 import '../../../library/presentation/category/controller/edit_category_controller.dart';
 import '../../../library/presentation/library/controller/category_library_options.dart';
 import '../../../library/presentation/library/controller/library_controller.dart';
+import '../../../library/presentation/library/controller/merge_settings_providers.dart';
 import '../../../manga_book/presentation/manga_details/controller/manga_details_controller.dart';
 import '../../controller/server_controller.dart';
 import '../../data/user_settings.dart';
@@ -200,6 +201,54 @@ class LibrarySettingsScreen extends ConsumerWidget {
                               onChanged: ref.read(
                                 libraryPerCategorySettingsProvider.notifier,
                               ).update,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SettingsGroupCard(
+                        children: [
+                          SwitchListTile(
+                            title: Text(context.l10n.mergeByTitle),
+                            subtitle: Text(context.l10n.mergeByTitleHelp),
+                            value: ref.watch(mergeByTitleProvider) ?? true,
+                            onChanged: ref
+                                .read(mergeByTitleProvider.notifier)
+                                .update,
+                          ),
+                          ListTile(
+                            title: Text(context.l10n.mergeMaxChapters),
+                            subtitle: Text(
+                              context.l10n.mergeMaxChaptersValue(
+                                ref.watch(mergeMaxChaptersProvider) ?? 5,
+                              ),
+                            ),
+                            enabled: ref.watch(mergeByTitleProvider) ?? true,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  onPressed: () {
+                                    final n =
+                                        ref.read(mergeMaxChaptersProvider) ?? 5;
+                                    if (n > 0) {
+                                      ref
+                                          .read(mergeMaxChaptersProvider.notifier)
+                                          .update(n - 1);
+                                    }
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () {
+                                    final n =
+                                        ref.read(mergeMaxChaptersProvider) ?? 5;
+                                    ref
+                                        .read(mergeMaxChaptersProvider.notifier)
+                                        .update(n + 1);
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ],
